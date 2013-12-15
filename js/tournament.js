@@ -244,7 +244,7 @@ $(function() {
       update_next_match(match.team2);
 
       currentMatch++;
-      while(matches[currentMatch].played)
+      while(currentMatch < matches.length - 1 && matches[currentMatch].played)
         currentMatch++;
       return match;
     }
