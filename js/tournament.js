@@ -253,11 +253,11 @@ $(function() {
     $("body").on("click", "#play", function(){
       if($(this).hasClass("disabled"))
         return;
-      var match = play(); 
+      
       $("#dimmer").dimmer('show');
       setTimeout(function(){
         $(".demo").hide();
-        
+        var match = play();
         var applet = document.createElement("applet");
         applet.setAttribute("id","game-applet");
         applet.setAttribute("archive","coderunner.jar");
