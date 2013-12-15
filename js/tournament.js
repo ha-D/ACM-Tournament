@@ -1,18 +1,17 @@
 var results = [[ /* WINNER BRACKET */
-    [[0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0], [0,0]],
-    [[0,0], [0,0], [0,0], [0,0]],
-    [[0,0], [0,0]],
-    [[0,0]]
+    [["-","-"], ["-","-"], ["-","-"], ["-","-"], ["-","-"], ["-","-"], ["-","-"], ["-","-"]],
+    [["-","-"], ["-","-"], ["-","-"], ["-","-"]],
+    [["-","-"], ["-","-"]],
+    [["-","-"]]
   ], [          /*LOSER BRACKET */
-    [[0,0], [0,0], [0,0], [0,0]],
-    [[0,0], [0,0], [0,0], [0,0]],
-    [[0,0], [0,0]],
-    [[0,0], [0,0]],
-    [[0,0]],
-    [[0,0]]
+    [["-","-"], ["-","-"], ["-","-"], ["-","-"]],
+    [["-","-"], ["-","-"], ["-","-"], ["-","-"]],
+    [["-","-"], ["-","-"]],
+    [["-","-"], ["-","-"]],
+    [["-","-"]],
+    [["-","-"]]
   ], [         /* FINALS */
-    [[0,0], [0,0]],
-    [[0,0]]
+    [["-","-"]]
   ]];
 
 var teams = [
@@ -98,9 +97,8 @@ function apply_bracket(){
   $('.demo').bracket({
     init: minimalData /* data to initialize the bracket with */,
         skipConsolationRound: true,
-         skipSecondaryFinal: true,
-         save: function(){},
-     decorator: {edit: edit_fn, render: render_fn},
+        skipSecondaryFinal: true,
+        decorator: {edit: edit_fn, render: render_fn},
   })
 }
 
@@ -109,6 +107,25 @@ $(function() {
     var currentMatch = 0;
     var selectedMatch = 0;
     var nextTeamMatch = {};
+
+    function init(){
+      apply_bracket();
+      $('.game').hide();
+      $(".sidebar").sidebar();
+      $(".sidebar").sidebar('toggle');
+      $.get("result.txt",function(data,status){
+        matches = parse_result_data(data);
+        var i = 0;
+        while(matches[i].round == 0){
+          nextTeamMatch[matches[i].team1] = i;
+          nextTeamMatch[matches[i].team2] = i;
+          i++;
+        }
+        console.log(matches);
+        console.log(nextTeamMatch);
+        update_versus();
+      });
+    }
 
     function match_ready(match){
       return nextTeamMatch[match.team1] == match.game_number && nextTeamMatch[match.team2] == match.game_number;
@@ -126,74 +143,84 @@ $(function() {
       }
     }
 
-    function update_versus(){
+    function update_versus(bypass){
       var match = matches[selectedMatch];
       var ready = true;
-      if(nextTeamMatch[match.team1] == match.game_number){
+      console.log(selectedMatch)
+      console.log(match)
+      if(bypass){
         $("#team1").html(get_team_by_id(match.team1).name);
-      }else{
-        $("#team1").html("?");
-        ready = false;
-      }
-
-      if(nextTeamMatch[match.team2] == match.game_number){
         $("#team2").html(get_team_by_id(match.team2).name);
-      }else{
-        $("#team2").html("?");
-        ready = false;
+      }else {
+        if(nextTeamMatch[match.team1] == match.game_number){
+          $("#team1").html(get_team_by_id(match.team1).name);
+        }else{
+          $("#team1").html("?");
+          ready = false;
+        }
+
+        if(nextTeamMatch[match.team2] == match.game_number){
+          $("#team2").html(get_team_by_id(match.team2).name);
+        }else{
+          $("#team2").html("?");
+          ready = false;
+        }
       }
 
       if(match.played){
         $("#skip").addClass("disabled");
         $("#play").removeClass("disabled");
-        $("#status").html("Game already played");
+        // $("#status").html("Game already played");
       }else if(ready){
         $("#skip").removeClass("disabled");
         $("#play").removeClass("disabled");
-        $("#status").html("Ready to play");
+        // $("#status").html("Ready to play");
       }else{
         $("#skip").addClass("disabled");
         $("#play").addClass("disabled");
-        $("#status").html("Game not ready");
+        // $("#status").html("Game not ready");
       }
     }
 
-    apply_bracket();
-    $('.game').hide();
-    $.get("result.txt",function(data,status){
-      matches = parse_result_data(data);
-      var i = 0;
-      while(matches[i].round == 0){
-        nextTeamMatch[matches[i].team1] = i;
-        nextTeamMatch[matches[i].team2] = i;
-        i++;
-      }
-      console.log(matches);
-      console.log(nextTeamMatch);
-    });
+  
 
     $("body").on("click", ".team", function(){
+      if($(this).find(".score").text().trim() != "--") {
+        var team1 = $(this).attr("data-teamid");
+        var team2 = $($(this).siblings()[0]).attr("data-teamid");
+        for(var i = 0; i < matches.length; i++) {
+          if((matches[i].team1 == team1 && matches[i].team2 == team2) ||
+            (matches[i].team1 == team2 && matches[i].team2 == team1)){
+            selectedMatch = i;
+            update_versus(true);
+            return;
+          }
+        }
+      }
       var teamid1 = $(this).attr("data-teamid");
+      if(teamid1 == -1)
+        return;
+
       var match = matches[nextTeamMatch[teamid1]];
       selectedMatch = match.game_number;
-
       update_versus();
-      // var opponent = match.team1;
-      // if(match.team1 == teamid1)
-      //   opponent = match.team2;
-
-      // if(nextTeamMatch[opponent] != match.game_number){
-      //   $("#team2").html("Not Ready");
-      // }else{
-      //   $("#team2").html(get_team_by_id(opponent).name);
-      // }
     })
+
+    function nextGame(){
+      for(var i = 0; i < matches.length; i++) {
+        if(!matches[i].played){
+          selectedMatch = i;
+          break;
+        }
+      }
+      update_versus();
+    }
 
     function play(){
       var match = matches[selectedMatch];
       console.log("Playing match: ")
       console.log(match);
-      if(!match_ready(match)){
+      if(!match.played && !match_ready(match)){
         return;
       }
 
@@ -223,9 +250,15 @@ $(function() {
     }
 
     $("body").on("click", "#skip", function(){
-      play();  
+      if($(this).hasClass("disabled"))
+        return;
+      play();
+      nextGame();
     })
+
     $("body").on("click", "#play", function(){
+      if($(this).hasClass("disabled"))
+        return;
       var match = play(); 
       $("#dimmer").dimmer('show');
       setTimeout(function(){
@@ -240,7 +273,7 @@ $(function() {
 
         var param1 = document.createElement("param");
         param1.setAttribute("name", "traceFile");
-        param1.setAttribute("value", match.trace_file);
+        param1.setAttribute("value", "logs/"+match.trace_file);
         applet.appendChild(param1);
 
         var param2 = document.createElement("param");
@@ -255,7 +288,23 @@ $(function() {
 
         $(".game")[0].appendChild(applet);        
         $(".game").show();
+        $("#skip").addClass("disabled");
+        $("#play").addClass("disabled");
         $("#dimmer").dimmer('hide');
       }, 500)
     })
+
+    $("body").on("click", "#tablebtn", function(){
+      $("#dimmer").dimmer('show');
+      setTimeout(function(){
+        nextGame();
+        $(".game").hide();
+        $("#skip").removeClass("disabled");
+        $("#play").removeClass("disabled");
+        $(".demo").show();
+        $("#dimmer").dimmer('hide');
+      }, 500);
+    });
+
+    init();
 })

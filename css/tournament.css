@@ -1,0 +1,84 @@
+
+#tournament {
+	font-family: Electrolize;
+	/*margin-top: 0px;*/
+}
+
+/*#tournament .container {
+	width: 1224px;
+	margin: auto;
+}*/
+
+#tournament .sth {
+	margin: 0px;
+	position: fixed;
+	z-index: 900;
+	width: 1230px;
+	margin-left: -2px;
+	background-color: white;
+} 
+
+#tournament .sidebar {
+	padding: 20px;
+	padding-top: 30px;
+}
+
+#tournament .sidebar .versus {
+	margin-bottom: 120px;
+	padding: 15px;
+}
+
+#tournament .sidebar .team {
+	font-size: 40px;
+	font-weight: bold;
+	
+}
+
+#tournament .sidebar .team1 {
+	float: left;
+}
+#tournament .sidebar .team2 {
+	float: right;
+}
+
+#tournament .sidebar .vs {
+	clear: both;
+	font-size: 20px;
+	font-weight: bold;
+	margin: auto;
+	margin-bottom: 30px;
+	margin-top: 70px;
+	width: 10px;
+}
+
+#tournament .sidebar .status {
+	font-size: 18px;
+	font-weight: bold;
+	margin-bottom: 100px;
+}
+
+#tournament #tablebtn {
+	margin-top: 60px;
+}
+
+
+#tournament .main{
+	z-index: 500;
+}
+
+#tournament .main .content{
+	/*margin-top: 150px;*/
+}
+
+#tournament .game.content{
+	margin-top: 10px;
+	margin-left: 50px;
+}
+
+#tournament .label {
+	width: 60px;
+}
+
+#tournament .score {
+	width: 40px;
+}
