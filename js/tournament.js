@@ -46,7 +46,7 @@ var minimalData = {
 
 
 function edit_fn(container, data, doneCb) {
-  console.log(data);
+  // console.log(data);
 }
 
 function render_fn(container, data, score) {
@@ -121,8 +121,6 @@ $(function() {
           nextTeamMatch[matches[i].team2] = i;
           i++;
         }
-        console.log(matches);
-        console.log(nextTeamMatch);
         update_versus();
       });
     }
@@ -146,8 +144,6 @@ $(function() {
     function update_versus(bypass){
       var match = matches[selectedMatch];
       var ready = true;
-      console.log(selectedMatch)
-      console.log(match)
       if(bypass){
         $("#team1").html(get_team_by_id(match.team1).name);
         $("#team2").html(get_team_by_id(match.team2).name);
@@ -218,8 +214,6 @@ $(function() {
 
     function play(){
       var match = matches[selectedMatch];
-      console.log("Playing match: ")
-      console.log(match);
       if(!match.played && !match_ready(match)){
         return;
       }
