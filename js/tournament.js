@@ -1,4 +1,5 @@
 $(function() {
+  
   var results = [[ /* WINNER BRACKET */
       [["-","-"], ["-","-"], ["-","-"], ["-","-"], ["-","-"], ["-","-"], ["-","-"], ["-","-"]],
       [["-","-"], ["-","-"], ["-","-"], ["-","-"]],
@@ -13,7 +14,7 @@ $(function() {
       [["-","-"]]
     ], [         /* FINALS */
       [["-","-"]]
-    ]];
+  ]];
 
   var teams = [
         [{name: "s1", flag: 'fi'}, {name: "t1", flag: 'kr'}],
@@ -24,7 +25,17 @@ $(function() {
         [{name: "s6", flag: 'se'}, {name: "t6", flag: 'us'}],
         [{name: "s7", flag: 'fi'}, {name: "t7", flag: 'kr'}],
         [{name: "s8", flag: 'se'}, {name: "t8", flag: 'us'}]
-    ]
+  ]
+
+  var matches;
+  var currentMatch = 0;
+  var selectedMatch = 0;
+  var nextTeamMatch = []
+
+  var minimalData = {
+    teams : teams,
+    results : results
+  }
 
   function get_team_by_id(team_id) {
     return teams[Math.floor(team_id/2)][team_id%2];
@@ -38,13 +49,6 @@ $(function() {
         return i * 2 + 1;
     }
   }
-
-
-  var minimalData = {
-    teams : teams,
-    results : results
-  }
-
 
   function edit_fn(container, data, doneCb) {
     // console.log(data);
@@ -103,12 +107,6 @@ $(function() {
     })
   }
 
-
-  var matches;
-  var currentMatch = 0;
-  var selectedMatch = 0;
-  var nextTeamMatch = {};
-
   function init(){
     apply_bracket();
     $('.game').hide();
@@ -123,6 +121,7 @@ $(function() {
         i++;
       }
       update_versus();
+      push_state();
     });
   }
 
@@ -179,8 +178,6 @@ $(function() {
     }
   }
 
-
-
   $("body").on("click", ".team", function(){
     if($(this).find(".score").text().trim() != "--") {
       var team1 = $(this).attr("data-teamid");
@@ -213,6 +210,40 @@ $(function() {
     update_versus();
   }
 
+  window.addEventListener("popstate", function(e) {
+    var state = e.state;
+    if(state != null){
+      for(var i = 0; i < results.length; i++){
+        for(var j = 0; j < results[i].length; j++){
+          for(var k = 0; k < results[i][j].length; k++){
+            results[i][j][k] = state.results[i][j][k];
+          }
+        }
+      }
+
+      for(var i = 0; i < matches.length; i++){
+        matches[i].played = state.played[i];
+      }
+
+      currentMatch = state.currentMatch;
+
+      for(var i = 0; i < state.nextTeamMatch.length; i++){
+        nextTeamMatch[i] = state.nextTeamMatch[i];
+      }
+
+      update_next_match();
+      nextGame();
+      apply_bracket();
+    }
+  });
+
+  function push_state(){
+    played = []
+    for(var i = 0; i < matches.length; i++)
+      played.push(matches[i].played);
+    history.pushState({results: results.slice(0), played: played, currentMatch: currentMatch, nextTeamMatch: nextTeamMatch.slice(0)}, null, null);
+  }
+
   function play(){
     var match = matches[selectedMatch];
     if(!match.played && !match_ready(match)){
@@ -223,24 +254,38 @@ $(function() {
     var round = match.round;
     var state = match.state;
 
+    var prev_state;
+    // update result array
     if(state == 0) {
+      prev_state = { state: 0, round: round, ind: match.ind, val: results[0][round][match.ind]};
       results[0][round][match.ind] = [match.score1, match.score2];
     }else if(state == 1) {
+      prev_state = { state: 1, round: (round - 1)*2, ind: match.ind, val: results[1][(round - 1)*2][match.ind]};
       results[1][(round - 1)*2][match.ind] = [match.score1, match.score2];
     }else if(state == 2) {
+      prev_state = { state: 1, round: (round - 1)*2 + 1, ind: match.ind, val: results[1][(round - 1)*2 + 1][match.ind]};
       results[1][(round - 1)*2 + 1][match.ind] = [match.score1, match.score2];
     }else if(state == 3) {
+      prev_state = { state: 2, round: 0, ind: match.ind, val: results[2][0][match.ind]};
       results[2][0][match.ind] = [match.score1, match.score2];
     }
 
+    // update brackets
     apply_bracket();
 
+    // update versus
     update_next_match(match.team1);
     update_next_match(match.team2);
+
 
     currentMatch++;
     while(currentMatch < matches.length - 1 && matches[currentMatch].played)
       currentMatch++;
+
+    // update history
+    push_state();
+   
+
     return match;
   }
 
@@ -249,6 +294,7 @@ $(function() {
       return;
     play();
     nextGame();
+    update_versus();
   })
 
   $("body").on("click", "#play", function(){
