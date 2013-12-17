@@ -369,7 +369,7 @@ $(function() {
 
   $("body").on("click", "#tablebtn", function(){
     show_tournament();
-    history.back();
+    // history.back();
   });
 
   init();
