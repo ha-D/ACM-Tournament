@@ -19,17 +19,17 @@
 } 
 
 #tournament .sidebar {
-	padding: 20px;
+	padding: 5px;
 	padding-top: 30px;
 }
 
 #tournament .sidebar .versus {
 	margin-bottom: 120px;
-	padding: 15px;
+	padding: 5px;
 }
 
 #tournament .sidebar .team {
-	font-size: 40px;
+	font-size: 34px;
 	font-weight: bold;
 	
 }
