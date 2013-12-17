@@ -1,5 +1,6 @@
+
+
 $(function() {
-  
   var results = [[ /* WINNER BRACKET */
       [["-","-"], ["-","-"], ["-","-"], ["-","-"], ["-","-"], ["-","-"], ["-","-"], ["-","-"]],
       [["-","-"], ["-","-"], ["-","-"], ["-","-"]],
@@ -13,18 +14,37 @@ $(function() {
       [["-","-"]],
       [["-","-"]]
     ], [         /* FINALS */
+      [["-","-"]],
       [["-","-"]]
-  ]];
+  ]];  
 
+  var teamsArray = [
+    {name: "3shebzi", flag: 'amir'}, 
+    {name: "rezaashtiani", flag: 'kr'},
+    {name: "703", flag: 'amir'},
+    {name: "safemen", flag: 'us'},
+    {name: "amiriahmad72", flag: 'fi'},
+    {name: "sarv123", flag: 'kr'},
+    {name: "dabiran", flag: 'se'},
+    {name: "unrefusableoffer", flag: 'us'},
+    {name: "gentles", flag: 'us'},
+    {name: "yasharsbsb", flag: 'kr'},
+    {name: "labod", flag: 'se'},
+    {name: "rest0", flag: 'us'},
+    {name: "mnm", flag: 'fi'},
+    {name: "rest1", flag: 'kr'},
+    {name: "mohsen1373", flag: 'se'},
+    {name: "rest2", flag: 'us'}
+  ];
   var teams = [
-        [{name: "s1", flag: 'fi'}, {name: "t1", flag: 'kr'}],
-        [{name: "s2", flag: 'se'}, {name: "t2", flag: 'us'}],
-        [{name: "s3", flag: 'fi'}, {name: "t3", flag: 'kr'}],
-        [{name: "s4", flag: 'se'}, {name: "t4", flag: 'us'}],
-        [{name: "s5", flag: 'fi'}, {name: "t5", flag: 'kr'}],
-        [{name: "s6", flag: 'se'}, {name: "t6", flag: 'us'}],
-        [{name: "s7", flag: 'fi'}, {name: "t7", flag: 'kr'}],
-        [{name: "s8", flag: 'se'}, {name: "t8", flag: 'us'}]
+      [{name: "mohsen1373", flag: 'amir'}, {name: "mnm", flag: 'kr'}],
+      [{name: "yasharsbsb", flag: 'amir'}, {name: "dabiran", flag: 'us'}],
+      [{name: "rest1", flag: 'fi'}, {name: "safemen", flag: 'kr'}],
+      [{name: "unrefusableoffer", flag: 'se'}, {name: "labod", flag: 'us'}],
+      [{name: "rezaashtiani", flag: 'us'}, {name: "sarv123", flag: 'kr'}],
+      [{name: "amiriahmad72", flag: 'se'}, {name: "3shebzi", flag: 'us'}],
+      [{name: "rest2", flag: 'fi'}, {name: "rest0", flag: 'kr'}],
+      [{name: "gentles", flag: 'se'}, {name: "703", flag: 'us'}]
   ]
 
   var matches;
@@ -67,8 +87,8 @@ $(function() {
     this.round = round;
     this.state = state;
     this.ind = ind;
-    this.score1 = score1;
-    this.score2 = score2;
+    this.score1 = parseInt(score1);
+    this.score2 = parseInt(score2);
     this.played = false;
     this.trace_file = trace_file;
   }
@@ -102,18 +122,32 @@ $(function() {
     $('.demo').bracket({
       init: minimalData /* data to initialize the bracket with */,
           skipConsolationRound: true,
-          skipSecondaryFinal: true,
+          skipSecondaryFinal: false,
           decorator: {edit: edit_fn, render: render_fn},
     })
   }
 
   function init(){
-    apply_bracket();
-    $('.game').hide();
-    $(".sidebar").sidebar();
-    $(".sidebar").sidebar('toggle');
+    
     $.get("result.txt",function(data,status){
       matches = parse_result_data(data);
+      //teams = []
+      for(var i = 0; i < matches.length; i++){
+          var team1 = get_team_by_id(matches[i].team1);
+          var team2 = get_team_by_id(matches[i].team2);
+          for(var j = 0; j < teamsArray.length; j++){
+            if(teamsArray[j].name == team1){
+              teams[i][0] = teamsArray[j];
+            }
+          }
+          
+          for(var j = 0; j < teamsArray.length; j++){
+            if(teamsArray[j].name == team2){
+              teams[i][1] = teamsArray[j];
+            }
+          }
+      }
+      
       var i = 0;
       while(matches[i].round == 0){
         nextTeamMatch[matches[i].team1] = i;
@@ -122,6 +156,11 @@ $(function() {
       }
       update_versus();
       push_state();
+
+      apply_bracket();
+      $('.game').hide();
+      $(".sidebar").sidebar();
+      $(".sidebar").sidebar('toggle');
     });
   }
 
@@ -276,6 +315,9 @@ $(function() {
     }else if(state == 3) {
       prev_state = { state: 2, round: 0, ind: match.ind, val: results[2][0][match.ind]};
       results[2][0][match.ind] = [match.score1, match.score2];
+    }else if(state == 4) {
+      prev_state = { state: 2, round: 0, ind: match.ind, val: results[2][0][match.ind]};
+      results[2][1][match.ind] = [match.score2,match.score1];
     }
 
     // update brackets
@@ -358,6 +400,7 @@ $(function() {
       $(".demo").show();
       $("#dimmer").dimmer('hide');
       page = "tournament";
+      apply_bracket();
     }, 500);
   }
 
@@ -365,7 +408,7 @@ $(function() {
     if($(this).hasClass("disabled"))
       return;
     show_game();
-  })
+  });
 
   $("body").on("click", "#tablebtn", function(){
     show_tournament();
