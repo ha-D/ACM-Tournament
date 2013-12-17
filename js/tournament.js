@@ -220,10 +220,12 @@ $(function() {
   $("body").on("click", ".team", function(){
     if($(this).find(".score").text().trim() != "--") {
       var team1 = $(this).attr("data-teamid");
+      var score1 = $(this).find(".score").text();
       var team2 = $($(this).siblings()[0]).attr("data-teamid");
+      var score2 = $($(this).siblings()[0]).find(".score").text()
       for(var i = 0; i < matches.length; i++) {
-        if((matches[i].team1 == team1 && matches[i].team2 == team2) ||
-          (matches[i].team1 == team2 && matches[i].team2 == team1)){
+        if((matches[i].team1 == team1 && matches[i].team2 == team2 && matches[i].score1 == score1 && matches[i].score2 == score2) ||
+          (matches[i].team1 == team2 && matches[i].team2 == team1 && matches[i].score1 == score2 && matches[i].score2 == score1)){
           selectedMatch = i;
           update_versus(true);
           return;
