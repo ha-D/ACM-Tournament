@@ -213,27 +213,35 @@ $(function() {
   window.addEventListener("popstate", function(e) {
     var state = e.state;
     if(state != null){
-      for(var i = 0; i < results.length; i++){
-        for(var j = 0; j < results[i].length; j++){
-          for(var k = 0; k < results[i][j].length; k++){
-            results[i][j][k] = state.results[i][j][k];
+      if(state.state_type == "match"){
+        for(var i = 0; i < results.length; i++){
+          for(var j = 0; j < results[i].length; j++){
+            for(var k = 0; k < results[i][j].length; k++){
+              results[i][j][k] = state.results[i][j][k];
+            }
           }
         }
+
+        for(var i = 0; i < matches.length; i++){
+          matches[i].played = state.played[i];
+        }
+
+        currentMatch = state.currentMatch;
+
+        for(var i = 0; i < state.nextTeamMatch.length; i++){
+          nextTeamMatch[i] = state.nextTeamMatch[i];
+        }
+
+        update_next_match();
+        nextGame();
+        apply_bracket();
+
+        if(page == "game")
+          show_tournament();
+      }else if(state.state_type == "show"){
+        var match = matches[state.match_id];
+        show_game(match);
       }
-
-      for(var i = 0; i < matches.length; i++){
-        matches[i].played = state.played[i];
-      }
-
-      currentMatch = state.currentMatch;
-
-      for(var i = 0; i < state.nextTeamMatch.length; i++){
-        nextTeamMatch[i] = state.nextTeamMatch[i];
-      }
-
-      update_next_match();
-      nextGame();
-      apply_bracket();
     }
   });
 
@@ -241,7 +249,7 @@ $(function() {
     played = []
     for(var i = 0; i < matches.length; i++)
       played.push(matches[i].played);
-    history.pushState({results: results.slice(0), played: played, currentMatch: currentMatch, nextTeamMatch: nextTeamMatch.slice(0)}, null, null);
+    history.pushState({state_type:"match", results: results.slice(0), played: played, currentMatch: currentMatch, nextTeamMatch: nextTeamMatch.slice(0)}, null, null);
   }
 
   function play(){
@@ -297,14 +305,13 @@ $(function() {
     update_versus();
   })
 
-  $("body").on("click", "#play", function(){
-    if($(this).hasClass("disabled"))
-      return;
-    
+  var page = "game";
+  function show_game(match){
     $("#dimmer").dimmer('show');
     setTimeout(function(){
       $(".demo").hide();
-      var match = play();
+      if(match === undefined)
+        match = play();
       var applet = document.createElement("applet");
       applet.setAttribute("id","game-applet");
       applet.setAttribute("archive","coderunner.jar");
@@ -332,19 +339,37 @@ $(function() {
       $("#skip").addClass("disabled");
       $("#play").addClass("disabled");
       $("#dimmer").dimmer('hide');
-    }, 500)
-  })
 
-  $("body").on("click", "#tablebtn", function(){
+      page = "game";
+     // history.push_state({state_type: "show", match_id: match.game_number}, null, null);
+    }, 500)
+  }
+
+  function show_tournament(){
     $("#dimmer").dimmer('show');
     setTimeout(function(){
       nextGame();
+      $("#game-applet").remove();
       $(".game").hide();
-      $("#skip").removeClass("disabled");
-      $("#play").removeClass("disabled");
+      if(currentMatch < matches.length - 1){
+        $("#skip").removeClass("disabled");
+        $("#play").removeClass("disabled");
+      }
       $(".demo").show();
       $("#dimmer").dimmer('hide');
+      page = "tournament";
     }, 500);
+  }
+
+  $("body").on("click", "#play", function(){
+    if($(this).hasClass("disabled"))
+      return;
+    show_game();
+  })
+
+  $("body").on("click", "#tablebtn", function(){
+    show_tournament();
+    history.back();
   });
 
   init();
